@@ -9,6 +9,7 @@ namespace WebApplication.Controllers
     [Authorize]
     public class HomeController : Controller
     {
+        private static WebApplication.Models.ImageAnalyzerHandler imageAnalyzer = new WebApplication.Models.ImageAnalyzerHandler();
         [AllowAnonymous]
         public ActionResult Index()
         {
@@ -18,7 +19,6 @@ namespace WebApplication.Controllers
         public ActionResult About()
         {
             ViewBag.Message = "Your application description page.";
-
             return View();
         }
         [AllowAnonymous]
@@ -26,51 +26,19 @@ namespace WebApplication.Controllers
         {
             return View();
         }
-        public class ImageAnalyzer
+        [AllowAnonymous]
+        public ActionResult AnalyzingResult()
         {
-            private string fileName;
-            private double colorMark;
-            private double overalMark;
-            private const string PROCESSING_MODULE = "ExcellentPhoto\\ExcellentPhoto\\Release\\ExcellentPhoto.exe";
-            private const string COLOR_ANALYZE = " color ";
-            private const string FACE_ANALYZE = " face ";
-            private const string OVERAL_ANALYZE = " all ";
-            private string processingRequests;
-            
-            public void AddParameter(string analyzeParameter)
-            {
-                processingRequests += analyzeParameter;
-            }
-            public void OverallAnalyze(string imagePath)
-            {
-                ClearParametrs();
-                AddParameter(OVERAL_ANALYZE);
-                AddParameter(imagePath);
-                StartAnalyze();
-            }
-            private void ClearParametrs()
-            {
-                processingRequests = "";
-            }
-            private void StartAnalyze()
-            {
-                try
-                {
-                    System.Diagnostics.Process analyze = System.Diagnostics.Process.Start(AppDomain.CurrentDomain.BaseDirectory + PROCESSING_MODULE, processingRequests);
-                    ClearParametrs();
-                    analyze.WaitForExit();
-                    analyze.Close();
-                }
-                catch (Exception e)
-                {
-                  
-                }
-            }
+            ExcellentPhotoLibrary.Image image = imageAnalyzer.GetImage();
+            ViewBag.FaceAnalyzeRating = image.GetFaceRating();
+            ViewBag.ColorAnalyzeRating = image.GetColorRating();
+            ViewBag.OverallAnalyzeRating = image.GetOverallRating();
+            return View();
         }
-
+        
         [AllowAnonymous]
         [HttpPost]
-        public ActionResult ImageProcessor(IEnumerable<HttpPostedFileBase> fileUpload)
+        public ActionResult ImageProcessor(IEnumerable<HttpPostedFileBase> fileUpload, String analysisType)
         {
             foreach (var file in fileUpload)
             {
@@ -81,12 +49,22 @@ namespace WebApplication.Controllers
                 {
                     file.SaveAs(System.IO.Path.Combine(path, filename));
                     string savedFilePath = file.FileName;
-                    ImageAnalyzer imageAnalyzer = new ImageAnalyzer();
-                    imageAnalyzer.OverallAnalyze(path + filename);
+                    imageAnalyzer.SetAnalyzedImage(path + filename);
+                    if (analysisType.Equals("colorAnalysis"))
+                    {
+                        imageAnalyzer.ColorAnalysis();
+                    }
+                    else if (analysisType.Equals("faceAnalysis"))
+                    {
+                        imageAnalyzer.FaceAnalysis();
+                    }
+                    else
+                    {
+                        imageAnalyzer.OverallAnalysis();
+                    }
                 }
             }
-
-            return RedirectToAction("Index");
+            return RedirectToAction("AnalyzingResult");
         }
 
     }

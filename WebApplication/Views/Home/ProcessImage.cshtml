@@ -2,11 +2,14 @@
     ViewBag.Title = "Обработка изображения";
 }
 <h2>@ViewBag.Title.</h2>
-<h2>Загрузка одного файла</h2>
 <p>
-    @using (Html.BeginForm("ImageProcessor", "home", FormMethod.Post, new { enctype = "multipart/form-data" }))
+    @using (Html.BeginForm("ImageProcessor", "Home", FormMethod.Post, new { enctype = "multipart/form-data" }))
     {
+        <label>@Html.RadioButton("analysisType", "colorAnalysis", false)Анализ цветового баланса</label><br />
+        <label>@Html.RadioButton("analysisType", "faceAnalysis", false)Анализ "лиц"</label><br />
+        <label>@Html.RadioButton("analysisType", "overallAnalysis", true)Общий анализ</label><br />
         <input type="file" name="fileUpload" /><br />
         <input type="submit" name="Submit" id="SubmitSingle" value="Upload" />
     }
+    <br />
 </p>
